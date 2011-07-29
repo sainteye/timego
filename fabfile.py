@@ -23,10 +23,9 @@ env.apache_path = '/etc/apache2'
 env.apache_config_path = '%(apache_path)s/sites-enabled/timego' % env
 env.python = 'python2.6'
 env.repository_url = "git@github.com:Timego/timego.git"
-env.django_site_id = "4d5cf5d173ae55149600001f"
+#env.django_site_id = "4d5cf5d173ae55149600001f"
 env.site_packages = "%(env_path)s/lib/%(python)s/site-packages" % env
 
-env.solr2_m4 = 'ubuntu@%(solr2)s:/usr/share/tomcat6/solr/core-m4/conf/schema.xml' % env
 
 """
 Environments
@@ -35,14 +34,14 @@ def production():
     """
     Selects production environment.
     """
-	pass
+    pass
 
 def staging():
     """
     Selects staging environment.
     """
     env.settings = 'staging'
-    env.hosts = ['qcl.csie.org']
+    env.hosts = ['qcl.csie.org:2222']
     env.user = 'timego'
     env.generic = False
 
@@ -102,8 +101,8 @@ def setup():
     install_django_nonrel()
     install_requirements()
 
-    if env.generic:
-        write_conf_generic()
+    #if env.generic:
+    #    write_conf_generic()
 
     #install_webserver_conf()
     #collect_static()
@@ -152,6 +151,22 @@ def install_requirements():
     with prefix('source %(env_path)s/bin/activate' % env):
         run('pip install -E %(env_path)s -r %(repo_path)s/requirements.txt' % env)
 
+def checkout_latest():
+    """
+    Pull the latest code on the specified branch.  Overwrites any local
+    configuration changes.
+    """
+    print yellow("Pulling latest source...")
 
+    with prefix('cd %(repo_path)s' % env):
+        sudo('chown -R %(user)s %(path)s' % env)
+        run('git reset --hard HEAD')
+        run('git checkout %(branch)s' % env)
+        run('git pull origin %(branch)s' % env)
 
+def fix_perms():
+    """
+    Gives www-data user write permissions to media directory
+    """
+    sudo('chown -R www-data %(repo_path)s/%(project_name)s/media' % env)
 
